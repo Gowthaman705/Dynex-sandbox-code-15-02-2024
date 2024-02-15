@@ -1,0 +1,567 @@
+/*============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : when job is create related job type assigned Checklist added in job type.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 15th Apr, 2023
+*Version        : 1.0
+*Methods        : public void createChecklistItemsForInsert(List<fax__Job__c> newJobs)
+public void createChecklistItemsOnUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+public void createRequiredPartsForInsert(List<fax__Job__c> newJobs)
+public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+*============================================================================================================*/
+public class VisitTriggerHandler {
+    public static boolean runOnce=false;
+    public void createChecklistItems(List<fax__Job__c> newJobs) 
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        
+        for(fax__Job__c job:newJobs)
+        {
+            if(job.fax__Job_Type__c!=Null)
+            {
+                jobsToUpdate.add(job);
+                
+            }  
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.createChecklistItemsForInsert(jobsToUpdate);
+    }
+    // =============================================================================================================== 
+    
+    /* public void AfterUpdateChecklistItems(List<fax__Job__c> newJobs) {
+List<fax__Checklist_Item__c> checklistItems = new List<fax__Checklist_Item__c>();
+List<fax__Checklist__c> checklistsToInsert = new List<fax__Checklist__c>();
+Set<Id> newJobTypeIds = new Set<Id>();
+
+for (fax__Job__c job : newJobs) {
+if (job.fax__Job_Type__c != null) {
+newJobTypeIds.add(job.fax__Job_Type__c);
+}
+}
+
+if (!newJobTypeIds.isEmpty()) {
+List<fax__Checklist_Item__c> newChecklistItems = [SELECT Id, fax__Item__c, Printout__c, fax__Job_Type__c FROM fax__Checklist_Item__c WHERE fax__Job_Type__c IN :newJobTypeIds ORDER BY CreatedDate ASC];
+
+for (fax__Job__c job : newJobs) {
+for (fax__Checklist_Item__c item : newChecklistItems) {
+
+fax__Checklist__c checklst = new fax__Checklist__c();
+checklst.fax__Job__c = job.Id;
+checklst.fax__Item__c = item.fax__Item__c;
+checklst.Printout__c = item.Printout__c; // Update Printout__c from Checklist_Item__c
+
+checklistsToInsert.add(checklst);
+System.debug('checklst=======' + checklst);
+}
+}
+
+
+update checklistsToInsert;
+System.debug('checklistsToInsert=======' + checklistsToInsert);
+}
+}
+*/
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the checklist based on the job type changes. 
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createChecklistItemsOnUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+================================================================================================================*/
+    public void createChecklistItemsOnUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs) {
+        List<fax__Checklist_Item__c> checklistItems = new List<fax__Checklist_Item__c>();
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for (fax__Job__c job : newJobs) {
+            //fax__Job__c oldJob = oldJobs.get(job.Id);            
+            if (job.fax__Job_Type__c != Null || job.fax__Job_Type__c == Null) {              
+                jobsToUpdate.add(job);                
+            }
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.createChecklistItemsOnUpdate(jobsToUpdate,oldJobs);
+    }
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Creating the part from required part based on the job type.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createRequiredPartsForInsert(List<fax__Job__c> newJobs) 
+================================================================================================================*/
+    public void createRequiredPartsForInsert(List<fax__Job__c> newJobs) {
+        List<fax__Required_Part__c> requiredParts = new List<fax__Required_Part__c>();
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c job:newJobs)
+        {
+            if(job.fax__Job_Type__c!=Null)
+            {
+                jobsToUpdate.add(job);
+                
+            }  
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.createRequiredPartsForInsert(jobsToUpdate);
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the parts based on the job type changes. 
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+================================================================================================================*/
+    public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs) {
+        List<fax__Part__c> requiredParts = new List<fax__Part__c>();
+        
+        FieldAxAppManager.createFaxPartsOnUpdate(newJobs, oldJobs);
+        
+        
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the DB Label and Gannt Color in job
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+================================================================================================================*/
+    public void jobBDLabelins (List<fax__Job__c> jobList) 
+    {
+        
+        if(jobList.size() > 0)
+        {
+            FieldAxAppManager.insertDbLable(jobList);
+            //FieldAxAppManager.updateActiveContractNumber(jobList);
+        } 
+    } 
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the DB Label and Gannt Color in job
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+================================================================================================================*/
+    public void jobDBLableUpd (List<fax__Job__c> updjobList,Map<id,fax__job__c> oldmapValues)
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c jb : updjobList)
+        {
+            if(jb.fax__Visit_Type__c != oldmapValues.get(jb.id).fax__Visit_Type__c 
+               || jb.Severity__c != oldmapValues.get(jb.id).Severity__c 
+               || jb.fax__Source_Case__c!=oldmapValues.get(jb.id).fax__Source_Case__c 
+               || jb.fax__Planned_Visit_Date_Time__c!=oldmapValues.get(jb.Id).fax__Planned_Visit_Date_Time__c
+               || jb.fax__Customer__c != oldmapValues.get(jb.Id).fax__Customer__c
+               || jb.fax__Contact__c != oldmapValues.get(jb.Id).fax__Contact__c
+               || jb.Received_Repair_Date__c != oldmapValues.get(jb.Id).Received_Repair_Date__c
+               || jb.Depot_Unit_Ownership__c != oldmapValues.get(jb.Id).Depot_Unit_Ownership__c
+               || jb.Depot_Received_SN__c != oldmapValues.get(jb.Id).Depot_Received_SN__c
+               || jb.RecordTypeId != oldmapValues.get(jb.Id).RecordTypeId
+               || jb.Product_Family__c != oldmapValues.get(jb.Id).Product_Family__c 
+              )
+                
+            {
+                jobsToUpdate.add(jb);
+            }                 
+        } 
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.UpdateDbLable(jobsToUpdate, oldmapValues);
+    }
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the REgion field on the job
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : Public Void JobFieldsUpdate (List<fax__Job__c> jobList, map<id,fax__Job__c>() oldJobMap)
+================================================================================================================*/    
+    Public Void JobFieldsUpdate(List<fax__Job__c> jobList,Map<id, fax__Job__c> oldJobMap)
+    {
+        Map<Id,RecordType> recordTypeMap = new Map<id,RecordType>([SELECT Id, Name FROM RecordType WHERE SObjectType = 'fax__Job__c']);
+        Date today = System.today();
+        Map<String,fax__Region__c> regionMap=new Map<String,fax__Region__c>();
+        
+        for(fax__Region__c region:[SELECT Name,id FROM fax__Region__c LIMIT 100]){
+            regionMap.put(region.Name,region);
+        }
+        Map<id,fax__Job_Type__c> jobTypeMap=new Map<id,fax__Job_Type__c>([select id, Name from fax__Job_Type__c limit 1000]);
+        system.debug('RegionMap>>>'+regionMap);
+        for(fax__Job__c jb : jobList)            
+        {
+            if(jb.fax__Status__c == 'On Site'){
+            jb.fax__Completion_Date_Time__c = null;
+            }
+            if(jb.Organization__c != null)
+            {
+                jb.fax__DB_Label__c = jb.Organization__c;
+            }
+            jb.fax__DB_Help_Text__c=((jb.fax__Job_Type__c!=NULL && jb.fax__DB_Help_Text__c==NULL)?jb.fax__Visit_Type__c+'-'+jobTypeMap.get(jb.fax__Job_Type__c).Name:jb.fax__DB_Help_Text__c);
+            if(jb.RecordTypeId!=oldJobMap.get(jb.id).recordTypeId){                                
+                //Update Region Field based on the job record type
+                if(recordTypeMap.get(jb.RecordTypeId).Name==System.label.Job_Group_Field_Service && jb.fax__Visit_Type__c!=System.label.Job_Group_Training){
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Field_Service)?regionMap.get(System.label.Job_Group_Field_Service).id:'');    
+                }else if(recordTypeMap.get(jb.RecordTypeId).Name==System.label.Job_Group_Depot_Repair && jb.fax__Visit_Type__c!=System.label.Job_Group_Training){
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Depot_Repair)?regionMap.get(System.label.Job_Group_Depot_Repair).id:'');
+                }else{
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Training)?regionMap.get(System.label.Job_Group_Training).id:'');
+                }
+            }
+        }
+        
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : 
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : Public Void JobFieldUpdate (List<fax__Job__c> jobList)
+================================================================================================================*/    
+    Public Void JobFieldInsert (List<fax__Job__c> jobList)
+    {
+        Map<Id,RecordType> recordTypeMap =new Map<id,RecordType>([SELECT Id, Name FROM RecordType WHERE SObjectType = 'fax__Job__c']);
+        Date today = System.today();
+        Map<id,fax__Job_Type__c> jobTypeMap=new Map<id,fax__Job_Type__c>([select id, Name from fax__Job_Type__c limit 1000]);
+        Map<String,fax__Region__c> regionMap=new Map<String,fax__Region__c>();
+        FieldAxSetting__mdt FaxSetting = [SELECT Id,Default_Job_Pricebook_ID__c FROM FieldAxSetting__mdt WHERE DeveloperName = 'Default_Records'];
+        String InstallBaseProduct = '';   
+        String InstallBaseName = '';
+        
+        for(fax__Region__c region:[SELECT id,Name FROM fax__Region__c LIMIT 100]){
+            regionMap.put(region.Name,region);
+        }
+        for(fax__Job__c job : jobList)
+        {
+            InstallBaseProduct = job.Install_base__c != null?job.Install_base__r.item__r.Name:'';
+            InstallBaseName = job.Install_base__c != null? job.Install_base__r.Name:'';
+            System.debug(InstallBaseProduct);
+        }
+        
+        system.debug('RegionMap>>>'+regionMap);
+        for(fax__Job__c jb : jobList)            
+        {
+            jb.fax__Add_LaborTravel__c = false;
+            if(jb.Organization__c != null)
+            {
+                jb.fax__DB_Label__c = jb.Organization__c;
+            }
+            jb.fax__Status__c=(jb.fax__Status__c==NULL?'Queued':jb.fax__Status__c);	//Set default to queued on insert
+            //Set the help text default value
+            jb.fax__DB_Help_Text__c=(jb.fax__Job_Type__c!=NULL?jb.fax__Visit_Type__c+'-'+jobTypeMap.get(jb.fax__Job_Type__c).Name:jb.fax__DB_Help_Text__c);
+            //  Update Region Field based on the job record type
+            if(!Test.isRunningTest()){
+                if(recordTypeMap.get(jb.RecordTypeId).Name==System.label.Job_Group_Field_Service && jb.fax__Visit_Type__c!=System.label.Job_Group_Training){                
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Field_Service)?regionMap.get(System.label.Job_Group_Field_Service).id:'');
+                    system.debug('RegionID1>>>'+jb.fax__Region__c);
+                }else if(recordTypeMap.get(jb.RecordTypeId).Name==System.label.Job_Group_Depot_Repair && jb.fax__Visit_Type__c!=System.label.Job_Group_Training){                 
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Depot_Repair)?regionMap.get(System.label.Job_Group_Depot_Repair).id:'');
+                    system.debug('RegionID2>>>'+jb.fax__Region__c);
+                }else{                 
+                    jb.fax__Region__c=(regionMap.containskey(System.label.Job_Group_Training)?regionMap.get(System.label.Job_Group_Training).id:'');
+                    system.debug('RegionID3>>>'+jb.fax__Region__c);
+                } 
+            }
+            if(jb.fax__PriceBook__c == Null )
+            {
+                jb.fax__PriceBook__c =  FaxSetting.Default_Job_Pricebook_ID__c;
+            }
+            if(jb.fax__Status__c == 'Received Repair')
+            {
+                jb.Received_Repair_Date__c = today;
+            }
+            if(jb.fax__Status__c == 'On Site')
+            {
+                jb.fax__Actual_Visit_Date_Time__c = System.now();
+                jb.fax__Completion_Date_Time__c = null;
+            }
+            else if(jb.fax__Status__c == 'Waiting for Authorization')
+            {
+                jb.Waiting_for_Authorization_Date__c = today;
+                jb.fax__Completion_Date_Time__c = null;
+            }
+            else if(jb.fax__Status__c == 'Repair in Progress')
+            {
+                jb.fax__Actual_Visit_Date_Time__c = today;
+                jb.fax__Completion_Date_Time__c = null;
+            }
+            else if(jb.fax__Status__c == 'In Shipping')
+            {
+                jb.In_Shipping_Date__c = today;
+                jb.fax__Completion_Date_Time__c = null;
+            }
+            else if(jb.fax__Status__c == 'Closed/Shipped')
+            {
+                jb.fax__Completion_Date_Time__c = today;
+            }
+            
+            else if(jb.fax__Visit_Type__c == 'Preventative Maintenance' || jb.fax__Visit_Type__c == 'Training'  || jb.fax__Visit_Type__c == 'Install/DeInstall')
+            {
+                jb.Severity__c = 'Operational'; 
+            }
+        }
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : Update the DB Label and Gannt Color in job
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void createPartsToUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobs)
+================================================================================================================*/
+    Public void JobUpdateforStatusChange(List<fax__Job__c> newVals, Map<Id, fax__Job__c> oldVal)
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c job : newVals){
+            if(job.fax__Status__c != oldVal.get(job.Id).fax__Status__c){
+                jobsToUpdate.add(job);
+            }
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.PreSetJobValues(jobsToUpdate,oldVal);
+        
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : When Job Is Completed and Update the Case field from Job.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 25/04/2023
+*Version        : 1.0
+*Methods        : Public void caseUpdate(List<fax__Job__c>oldjob)
+================================================================================================================*/    
+    Public void caseUpdate(List<fax__Job__c>oldjob)
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c job : oldjob)
+        {
+            if(oldjob.size() > 0)
+            {
+                jobsToUpdate.add(job);
+            }  
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.updateCase(jobsToUpdate);
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : When Job Is Completed and Update the JobItem Fields To Install-base.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 25/04/2023
+*Version        : 1.0
+*Methods        : Public void InstallbasUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+================================================================================================================*/    
+    Public void InstallbasUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c jobIt :newJobs)
+        {
+            if(jobIt.fax__Status__c =='Completed')
+            {
+                jobsToUpdate.add(jobIt);   
+            }  
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.updateInstallbase(jobsToUpdate, oldJobMap);
+    } 
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : When Job Is Completed and Create Travel and Labour line items on the job
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 25/04/2023
+*Version        : 1.0
+*Methods        : Public void InstallbasUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+================================================================================================================*/    
+    Public void AddLabourandTravel(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+    {
+        List<fax__Job__c> jobsToUpdate = new List<fax__Job__c>();
+        for(fax__Job__c job :newJobs){
+            if(job.fax__Closed__c && !oldJobMap.get(job.id).fax__Closed__c){                
+                jobsToUpdate.add(job);   
+            }  
+            
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.AddLabourandTravel(jobsToUpdate);
+    } 
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : 
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 25/04/2023
+*Version        : 1.0
+*Methods        : Public void InstallbasUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+================================================================================================================*/        
+    Public void generateOrderAfterUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+    { 
+        FieldAxAppManager.generateOrder(newJobs,oldJobMap);
+        FieldAxAppManager.updateLastPmdate(newJobs,oldJobMap); 
+    }
+    
+    
+    
+    /* for(fax__Job__c joborder :newJobs)
+{
+if(joborder.RecordTypeId == Label.FS_RecordType_ID && joborder.fax__Status__c == 'Completed')
+{
+FieldAxAppManager.generateOrder(newJobs,oldJobMap);
+}  
+if(joborder.RecordTypeId == Label.Depot_Repair_Record_Type && joborder.fax__Status__c == 'Completed' && joborder.Generate_Order__c == true)
+{
+FieldAxAppManager.generateOrder(newJobs,oldJobMap);
+}
+}
+*/
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    : 
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 25/04/2023
+*Version        : 1.0
+*Methods        : Public void InstallbasUpdate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+================================================================================================================*/
+    Public void jobServerityUpd (List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobMap)
+    {
+        List<fax__Job__c> jobsToUpdate=new List<fax__Job__c>();
+        for(fax__Job__c joborder :newJobs)
+        {
+            if(joborder.fax__Visit_Type__c != oldJobMap.get(joborder.id).fax__Visit_Type__c)
+            {
+                jobsToUpdate.add(joborder);    
+            }   
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.JobSeverityUpdate(jobsToUpdate);
+    }
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    :  
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void CreateJobNotes (List<fax__Job__c> newJobs) 
+================================================================================================================*/
+    public void CreateJobNotes (List<fax__Job__c> newJobs) 
+    {        
+        FieldAxAppManager.insertCaseCommentsOnInsert(newJobs);                    
+    } 
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    :  
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 06/04/2023
+*Version        : 1.0
+*Methods        : public void UpdateJobNotes(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap) 
+================================================================================================================*/
+    public void UpdateJobNotes(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap) 
+    {
+        
+        FieldAxAppManager.insertCaseCommentsOnUpdate(newJobs,oldJobsMap);
+        
+    } 
+    public void insertServiceReport(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap ){
+        
+        for(fax__Job__c jb : newJobs) 
+        {
+            if(jb.Generate_Service_Report__c && jb.fax__Status__c =='Completed' && oldJobsMap.get(jb.id).fax__Status__c != 'Completed')
+            {
+                FieldAxAppManager.attachFileTojob(jb.id);  
+                
+            }
+            
+        }
+    }
+    
+    /*===============================================================================================================
+*Class Name     : VisitTriggerHandler
+*Description    :  
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 01/06/2023
+*Version        : 1.0
+*Methods        : public void JobandTravelTimeValidate(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap) 
+================================================================================================================*/
+    public void returnOrderValidation(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap){       
+        try {  
+            Set<Id> jobIds = new Set<ID>();
+            List<ID> pasrtsConsumedID = new List<ID>();
+            Map<id,boolean> Validation = new Map<id,boolean>();
+            for (fax__Job__c job : newJobs){
+                if (job.fax__Status__c == 'Completed'){
+                    jobIds.add(job.Id);
+                    system.debug('jobIds'+jobIds);
+                } 
+            } 
+            List<fax__Part_Consumed__c> partsConsumedList = [SELECT Id,Name,fax__Job__c,Return_Required__c,Defective_SN_to_be_Returned__c From fax__Part_Consumed__c Where fax__Job__c =:jobIds AND Return_Required__c = true];  
+            if(partsConsumedList.size() > 0)
+            {
+                for(fax__Part_Consumed__c parts: partsConsumedList)
+                {
+                    if(parts.Defective_SN_to_be_Returned__c == null)
+                    {
+                        Validation.put(parts.fax__Job__c,true);
+                    } 
+                }
+            }  
+            
+            for(fax__Job__c jb:newJobs)
+            {
+                if(Validation.get(jb.id) == true)
+                { 
+                    jb.addError(Label.Parts_Consumed_Return_Order_Validation);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // Handle the exception here
+            system.debug('An exception occurred: ' + e.getMessage());
+            // You can perform additional error handling or logging if needed
+        }
+        
+    }
+    Public void updateContractNumber(List<fax__Job__c> newvalues, Map<Id, fax__Job__c> oldmapvalues)
+    {
+        List<fax__Job__c> jobsToUpdate=new List<fax__Job__c>();
+        for(fax__Job__c joborder :newvalues)
+        {
+            if(joborder.Install_base__c != oldmapvalues.get(joborder.id).Install_base__c){                 
+                jobsToUpdate.add(joborder);                    
+            }
+        }
+        if(jobsToUpdate.size()>0)
+            FieldAxAppManager.updateActiveContractNumber(jobsToUpdate);                 
+    }
+    
+    
+    //When Job completed need to check the all assignment are closed.
+    public void checkclosedAssignment(List<fax__Job__c> newJobs, Map<Id, fax__Job__c> oldJobsMap){  
+        Boolean checkjob=false;
+        Set<Id> jobIds = new Set<ID>();
+        List<fax__Job__c> Jobvalue = new List<fax__Job__c>();
+        for(fax__Job__c jobs : newJobs) {
+            if(jobs.fax__Status__c =='Completed' && oldJobsMap.get(jobs.id).fax__Status__c != 'Completed'){
+                jobIds.add(jobs.Id);
+                Jobvalue.add(jobs);
+            }
+        }
+        List<fax__Assigned_Engineer__c> assignment =[SELECT Id, Name, fax__Job_new__c, fax__Status__c, fax__Start__c, fax__Travel_End__c, fax__Travel_Start__c, fax__Job_Status__c, fax__Site__c
+                                                     FROM fax__Assigned_Engineer__c
+                                                     WHERE fax__Job_new__c = :jobIds and fax__Status__c!= 'Completed'];
+        if(assignment.size()>0){
+            checkjob = true;     
+        }
+        if(checkjob==true){
+            for(fax__Job__c Joberror: Jobvalue){
+                Joberror.addError(Label.JobErrorMessage);
+            }
+        }
+    }
+    
+ 
+    
+    
+}
